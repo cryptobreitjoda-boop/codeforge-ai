@@ -33,6 +33,13 @@ describe("CodeForge editor app", () => {
     expect(await screen.findByPlaceholderText("Befehl oder Datei suchen...")).toBeInTheDocument();
   });
 
+  it("opens command palette via meta shortcut", async () => {
+    render(<App />);
+    fireEvent.keyDown(window, { key: "k", metaKey: true });
+
+    expect(await screen.findByPlaceholderText("Befehl oder Datei suchen...")).toBeInTheDocument();
+  });
+
   it("adds Activity.tsx after AI build command", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -44,5 +51,11 @@ describe("CodeForge editor app", () => {
     await waitFor(() => {
       expect(screen.getByText("Activity.tsx")).toBeInTheDocument();
     });
+
+    await user.click(screen.getByText("Activity.tsx"));
+    const activityEditor = screen
+      .getAllByRole("textbox")
+      .find((el) => el.tagName === "TEXTAREA" && el.value.includes("Letzte Aktivitäten"));
+    expect(activityEditor).toBeDefined();
   });
 });

@@ -5,7 +5,7 @@ Der frühere `index.html`-Artifact-Export wurde in wartbare Quellmodule unter `s
 
 ## Voraussetzungen
 
-- Node.js **>= 20.11.0**
+- Node.js **>= 20.19.0**
 - npm (mit Lockfile)
 
 ## Start aus frischem Checkout

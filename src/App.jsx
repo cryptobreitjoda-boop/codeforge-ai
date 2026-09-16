@@ -59,9 +59,8 @@ const dd = (e) => {    if (e.endsWith(".tsx") || e.endsWith(".ts")) return f($t,
 
 export default function App() {
   let [e, n] = React.useState(b1), [t, r] = React.useState(la), [l, u] = React.useState("/src/App.tsx"), [o, i] = React.useState(["/src/App.tsx", "/src/components/Dashboard.tsx", "/package.json"]), [a, d] = React.useState(!1), [h, g] = React.useState("/src/components/Dashboard.tsx"), [m, E] = React.useState("explorer"), [N, z] = React.useState(!0), [K, c] = React.useState(!1), [s, p] = React.useState(!1), [S, C] = React.useState(!1), [R, O] = React.useState(!1), [T, Y] = React.useState("idle"), [M, L] = React.useState(["[system] CodeForge Final bereit."]), [Kt, tt] = React.useState(""), yd = React.useRef(null), [Ln, Ru] = React.useState("local"), [$n, oa] = React.useState({
-    url: "",
-    key: ""
-  }), [ul, ia] = React.useState(null), [md, hd] = React.useState([{
+    url: ""
+  }), supabaseKeyRef = React.useRef(""), [ul, ia] = React.useState(null), [md, hd] = React.useState([{
     id: "1",
     name: "dashboard-v2",
     updated: "heute 14:32"
@@ -75,10 +74,10 @@ export default function App() {
   }]), Yt = t[l], ya = t[h], ev = "verbunden", nv = React.useMemo(() => Object.keys(t).length > 3, [t]);
   React.useEffect(() => {
     (async () => {
-      Y("booting"), L((w) => [...w, "[wc] Versuche WebContainer zu booten via CDN..."]);
+      Y("booting"), L((w) => [...w, "[wc] Versuche WebContainer zu booten aus lokalen Dependencies..."]);
       try {
-        let w = await import("https://unpkg.com/@webcontainer/api@1.1.9/dist/index.js").catch(() => null);
-        if (!w) throw Error("CDN nicht geladen");
+        let w = await import("@webcontainer/api").catch(() => null);
+        if (!w) throw Error("WebContainer-Paket nicht geladen");
         let {
           WebContainer: D
         } = w;
@@ -104,7 +103,7 @@ export default function App() {
     };
     return window.addEventListener("keydown", v), () => window.removeEventListener("keydown", v)
   }, []);
-  let ma = (v, w) => {
+  let toggleFolderExpanded = (v, w) => {
       return w.map((D) => {
         if (D.path === v && D.type === "folder") return {
           ...D,
@@ -112,7 +111,7 @@ export default function App() {
         };
         if (D.children) return {
           ...D,
-          children: ma(v, D.children)
+          children: toggleFolderExpanded(v, D.children)
         };
         return D
       })
@@ -215,7 +214,7 @@ export default function App() {
         ].map(([t,d,u])=>(
           <div key={t} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-violet-500/20 grid place-items-center text-[10px]">{(u as string)[0]}</div>
+              <div className="w-6 h-6 rounded-full bg-violet-500/20 grid place-items-center text-[10px]">{String(u)[0]}</div>
               <span className="text-zinc-200">{t}</span>
             </div>
             <span className="text-xs text-zinc-500">{d}</span>
@@ -264,14 +263,14 @@ export default function App() {
       else if (v === "npm run build") L((w) => [...w, "[vite] building...", "[vite] ✓ 42 modules transformed", "[vite] dist/ ready - 128kb"]);
       else L((w) => [...w, `output: ${v} ausgeführt (simuliert)`])
     }, Sd = async () => {
-      if (!$n.url || !$n.key) return;
+      if (!$n.url || !supabaseKeyRef.current) return;
       Ru("connecting"), L((v) => [...v, `[supabase] verbinde zu ${$n.url.slice(0,30)}...`]);
       try {
-        if (await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm").catch(() => null)) L((w) => [...w, "[supabase] SDK geladen ✓"]);
-        else L((w) => [...w, "[supabase] CDN nicht erreichbar - nutze Mock Client"]);
+        if (await import("@supabase/supabase-js").catch(() => null)) L((w) => [...w, "[supabase] SDK geladen ✓"]);
+        else L((w) => [...w, "[supabase] Paketimport fehlgeschlagen - nutze Mock Client"]);
         await new Promise((w) => setTimeout(w, 800)), Ru("connected"), L((w) => [...w, "[supabase] verbunden ✓ - Auth bereit"])
       } catch {
-        Ru("connected")
+        Ru("local"), L((w) => [...w, "[supabase] Verbindung fehlgeschlagen - bleibe im lokalen Modus"])
       }
     }, Sa = async () => {
       fa(!0), L((w) => [...w, `[cloud] syncing ${Object.keys(t).length} files...`]), await new Promise((w) => setTimeout(w, 900));
@@ -318,7 +317,7 @@ export default function App() {
       return y("div", {
         children: [y("button", {
           onClick: () => {
-            if (B) n((Q) => ma(v.path, Q));
+            if (B) n((Q) => toggleFolderExpanded(v.path, Q));
             else if (u(v.path), !o.includes(v.path)) i((Q) => [...Q, v.path])
           },
           className: `w-full flex items-center gap-1.5 px-2 py-1 text-[13px] rounded-md text-left hover:bg-white/[0.06] transition
@@ -626,7 +625,9 @@ export default function App() {
               t: "Supabase RLS prüfen",
               l: "security",
               c: "amber"
-            }].map((v) => y("div", {
+            }].map((v) => {
+              let w = v.c === "red" ? "text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/20" : v.c === "amber" ? "text-[10px] px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/20" : "text-[10px] px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/20";
+              return y("div", {
               className: "rounded-lg border border-white/10 bg-white/[0.03] p-3",
               children: [f("div", {
                 className: "text-[12px] text-zinc-200",
@@ -634,14 +635,15 @@ export default function App() {
               }), y("div", {
                 className: "mt-2 flex items-center gap-2",
                 children: [f("span", {
-                  className: `text-[10px] px-1.5 py-0.5 rounded-full bg-${v.c}-500/20 text-${v.c}-300 border border-${v.c}-500/20`,
+                  className: w,
                   children: v.l
                 }), f("span", {
                   className: "text-[10px] text-zinc-500",
                   children: "#24 • vor 1h"
                 })]
               })]
-            }, v.t))
+            }, v.t)
+            })
           }), m === "actions" && y("div", {
             className: "p-3 space-y-3",
             children: [y("div", {
@@ -694,7 +696,10 @@ export default function App() {
                   className: "text-[11px] text-zinc-500",
                   children: v.d
                 })]
-              }), f("div", {
+              }), f("button", {
+                type: "button",
+                "aria-label": `${v.n} ${v.on ? "aktiv" : "inaktiv"}`,
+                "aria-pressed": v.on,
                 className: `w-8 h-4 rounded-full p-0.5 transition ${v.on?"bg-violet-600":"bg-white/20"}`,
                 children: f("div", {
                   className: `w-3 h-3 rounded-full bg-white transition ${v.on?"translate-x-4":""}`
@@ -719,6 +724,7 @@ export default function App() {
               })]
             }), y("div", {
               className: "flex-1 overflow-y-auto space-y-3 pr-1",
+              "aria-live": "polite",
               children: [kd.map((v, w) => f("div", {
                 className: `rounded-xl px-3 py-2.5 text-[12px] leading-relaxed ${v.role==="ai"?"bg-white/[0.06] border border-white/10 text-zinc-200":"bg-violet-600 text-white ml-6"}`,
                 children: v.text
@@ -761,7 +767,11 @@ export default function App() {
               children: v.split("/").pop()
             }), f("button", {
               onClick: (w) => {
-                w.stopPropagation(), i((D) => D.filter((B) => B !== v))
+                w.stopPropagation(), i((D) => {
+                  let B = D.filter((Q) => Q !== v);
+                  if (l === v) u(B[B.length - 1] || "/src/App.tsx");
+                  return B
+                })
               },
               className: "ml-1 w-4 h-4 grid place-items-center rounded hover:bg-white/10",
               children: f(sn, {
@@ -1142,7 +1152,7 @@ export default function App() {
                 children: "WebContainer wird gebootet..."
               }), f("div", {
                 className: "text-zinc-500",
-                children: "Lädt via CDN: @webcontainer/api@1.1.9 • Fallback falls COOP/COEP fehlt."
+                children: "Lädt @webcontainer/api aus Projekt-Dependencies • Fallback falls COOP/COEP fehlt."
               })]
             })]
           }), y("div", {
@@ -1219,6 +1229,9 @@ export default function App() {
       onClick: () => p(!1),
       children: y("div", {
         onClick: (v) => v.stopPropagation(),
+        role: "dialog",
+        "aria-modal": !0,
+        "aria-label": "Command Palette",
         className: "w-full max-w-[560px] rounded-2xl border border-white/10 bg-[#1a1a1e] shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8)] overflow-hidden",
         children: [y("div", {
           className: "h-12 flex items-center px-4 gap-2 border-b border-white/[0.06]",
@@ -1242,7 +1255,7 @@ export default function App() {
             }
           }, {
             icon: Ht,
-            label: "Build & Download ZIP",
+            label: "Build & Download JSON",
             action: () => {
               Fu(), p(!1)
             }
@@ -1315,9 +1328,11 @@ export default function App() {
               className: "mt-3 space-y-3",
               children: [y("div", {
                 children: [f("label", {
+                  htmlFor: "supabase-url-input",
                   className: "text-[11px] text-zinc-500",
                   children: "Supabase URL"
                 }), f("input", {
+                  id: "supabase-url-input",
                   value: $n.url,
                   onChange: (v) => oa({
                     ...$n,
@@ -1328,14 +1343,15 @@ export default function App() {
                 })]
               }), y("div", {
                 children: [f("label", {
+                  htmlFor: "supabase-anon-key-input",
                   className: "text-[11px] text-zinc-500",
                   children: "Anon Key"
                 }), f("input", {
-                  value: $n.key,
-                  onChange: (v) => oa({
-                    ...$n,
-                    key: v.target.value
-                  }),
+                  id: "supabase-anon-key-input",
+                  defaultValue: "",
+                  onChange: (v) => {
+                    supabaseKeyRef.current = v.target.value
+                  },
                   placeholder: "eyJ...",
                   type: "password",
                   className: "mt-1 w-full h-9 px-3 rounded-lg bg-[#1e1e21] border border-white/10 text-[13px] focus:outline-none focus:border-violet-500/50"
@@ -1346,7 +1362,7 @@ export default function App() {
                 children: Ln === "connecting" ? "Verbinde..." : Ln === "connected" ? "✓ Verbunden" : "Verbinden & SDK laden"
               }), y("div", {
                 className: "text-[11px] text-zinc-500 leading-relaxed",
-                children: ["Lädt SDK via CDN: https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm", f("br", {}), 'Wenn nicht konfiguriert: Nutze In-Memory Mock – zeige "Lokal gespeichert".']
+                children: ["Lädt SDK aus Projekt-Dependencies: @supabase/supabase-js", f("br", {}), 'Wenn nicht konfiguriert: Nutze In-Memory Mock – zeige "Lokal gespeichert".']
               })]
             })]
           }), y("div", {
@@ -1357,6 +1373,8 @@ export default function App() {
             }), y("div", {
               className: "mt-3 flex gap-2",
               children: [f("input", {
+                id: "auth-email-input",
+                "aria-label": "E-Mail",
                 placeholder: "email",
                 value: ul || "",
                 onChange: (v) => ia(v.target.value),
@@ -1389,6 +1407,9 @@ export default function App() {
       onClick: () => O(!1),
       children: y("div", {
         onClick: (v) => v.stopPropagation(),
+        role: "dialog",
+        "aria-modal": !0,
+        "aria-label": "Diff Ansicht",
         className: "w-full max-w-[760px] max-h-[80vh] rounded-2xl border border-white/10 bg-[#18181b] shadow-2xl flex flex-col overflow-hidden",
         children: [y("div", {
           className: "h-11 flex items-center px-4 border-b border-white/[0.06] justify-between",

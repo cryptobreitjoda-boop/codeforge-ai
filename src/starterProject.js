@@ -113,11 +113,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(<App />)`,
     },
     "/src/styles.css": {
       language: "css",
-      content: `@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root { color-scheme: dark; }`,
+      content: `:root { color-scheme: dark; }
+body { margin: 0; font-family: Inter, system-ui, sans-serif; }`,
       original: ""
     },
     "/package.json": {
